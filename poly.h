@@ -17,7 +17,7 @@ public:
     constexpr poly(const poly<U, M>& other) 
     requires ((M <= N) && std::is_convertible_v<U, T>) {
         for (std::size_t i = 0; i < M; ++i) {
-            this.coefs[i] = static_cast<T>(other.coefs[i]);
+            this->coefs[i] = static_cast<T>(other.coefs[i]);
         }
     }
 
@@ -25,7 +25,7 @@ public:
     constexpr poly(poly<U, M>&& other) 
     requires ((M <= N) && std::is_convertible_v<U, T>) {
         for (std::size_t i = 0; i < M; ++i) {
-            this.coefs[i] = static_cast<T>(std::move(other.coefs[i]));
+            this->coefs[i] = static_cast<T>(std::move(other.coefs[i]));
         }
     }
 
@@ -33,7 +33,7 @@ public:
     constexpr poly(U&& arg) 
     requires std::convertible_to<U,T> {
         static_assert(N >= 1, "N cannot be smaller than 1");
-        this.coefs[0] = static_cast<T>(std::move(arg));
+        this->coefs[0] = static_cast<T>(std::move(arg));
     }
 
     template <typename... Args>
