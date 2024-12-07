@@ -208,6 +208,48 @@ template <typename T, std::size_t N = 0> class poly {
         result[0] -= static_cast<T>(value);
         return result;
     }
+
+    // Funkcja pomocnicza dla at(...)
+    constexpr T pow(const T& init, const T& base, std::size_t exp) {
+   		T res = init;
+   		for (std::size_t i = 0; i < exp; ++i) {
+   			res *= base;
+   		}
+   		return res;
+   	}
+   	
+   	// k == 0
+   	constexpr const poly<T>& at() {
+    	return *this;
+    }
+    
+    // k == 1
+    template <typename U>
+    constexpr T at(const U& arg)
+    requires ConvertibleTo<T, U> {
+    	T res = T{};
+		for (std::size_t i = 0; i < N; ++i) {
+    		res += pow(this->coefs[i], arg, i);
+    	}
+    	return res;
+    }
+   	
+   	// k > 1
+    template <typename U, typename... Args>
+    constexpr auto at(const U& first, Args&&... args)
+    requires (ConvertibleTo<U, T> && (ConvertibleTo<Args, T> && ...)) {
+        if (N == 1) {
+       		// "nadmiarowe argumenty są ignorowane, gdyż zmienne 
+       		// xi dla i>n po prostu nie występują w wielomianie."
+        	return this->at(first);
+        }
+        
+        T result = T{};
+		for (std::size_t i = 0; i < N; ++i) {
+    		result += this->coefs[i].at(args...) * pow(first, i);
+		}
+		return result;
+    }
 };
 
 // Non-member operator* for scalar multiplication (commutative property)
