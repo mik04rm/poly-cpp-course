@@ -18,23 +18,6 @@ constexpr poly<int, 2> compile_time_assignment() {
 }
 
 int main() {
-    // poly<int, 2> p(2137, 6969);
-    // cout << "p done" << endl;
-    // poly<poly<int, 2>, 1> q(p);
-    // cout << "q done" << endl;
-    // for (size_t i = 0; i < q.size(); i++) {
-    //     cout << q[i][0] << " " << q[i][1] << endl;
-    // }
-
-    // for (size_t i = 0; i < p.size(); i++) {
-    //     cout << p[i] << endl;
-    // }
-
-    // poly<int, 2> q(3, 4);
-    // poly<int, 2> r = p + q;
-    // return 0;
-    // ----------------------------------------------
-
     constexpr auto p = poly(2, 1);
     static_assert(p.size() == 2 && p[0] == 2 && p[1] == 1);
     static_assert(std::is_same_v<decltype(p), const poly<int, 2>>);
@@ -49,8 +32,18 @@ int main() {
     static_assert(q[2][1] == 0.0);
 
     static_assert(p + q == poly(poly(3.0, 2.0), 4.0, 4.0));
-
     static_assert(q + p == poly(poly(3.0, 2.0), 4.0, 4.0));
+    static_assert(std::is_same_v<decltype(p + q), poly<poly<double, 2>, 3>>);
+    static_assert(-q == poly(poly(-1.0, -2.0), -3.0, -4.0));
+    static_assert(p - q == poly(poly(1.0, -2.0), -2.0, -4.0));
+    static_assert(q - p == poly(poly(-1.0, 2.0), 2.0, 4.0));
+
+    constexpr auto xd = p * q;
+    constexpr auto dx = poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0);
+
+    static_assert(std::is_same_v<decltype(p * q), poly<poly<double, 2>, 4>>);
+    static_assert(p * q == poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0));
+    static_assert(q * p == poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0));
 
     constexpr auto pp(p);
     static_assert(p == pp);
@@ -77,8 +70,14 @@ int main() {
     static_assert(x[2][0] == 4.0);
     static_assert(x[2][1] == 0.0);
 
-    static_assert(q * 2 == poly(poly(2.0, 4.0), 6.0, 8.0));
+    static_assert(q * 2.0 == poly(poly(2.0, 4.0), 6.0, 8.0));
     static_assert(2 * q == q * 2);
+
+    constexpr auto s = poly(poly(poly(1, 2), 3), 4);
+    static_assert(s * 2 == poly(poly(poly(2, 4), 6), 8));
+
+    constexpr auto t = (poly<poly<int, 1>, 1>)2;
+    static_assert(t[0][0] == 2);
     
 }
 
