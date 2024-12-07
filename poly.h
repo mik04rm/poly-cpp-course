@@ -21,10 +21,8 @@
 // TODO maybe hide some things in the details namespace
 // TODO probably some of the static_cast and convertible_to are wrong
 
-
 template <typename U, typename T, std::size_t M, std::size_t N>
 concept PolyConvertible = (M <= N) && std::is_convertible_v<U, T>;
-
 
 template <typename T, std::size_t N = 0> class poly {
 
@@ -195,9 +193,7 @@ template <typename T, std::size_t N = 0> class poly {
     // Addition of a poly object with a scalar
     template <typename U>
         requires std::convertible_to<U, T>
-    constexpr auto operator+(const U& value) const
-
-    {
+    constexpr auto operator+(const U& value) const {
         poly result = *this;
         result[0] += static_cast<T>(value);
         return result;
@@ -206,9 +202,7 @@ template <typename T, std::size_t N = 0> class poly {
     // Subtraction of a poly object with a scalar
     template <typename U>
         requires std::convertible_to<U, T>
-    constexpr auto operator-(const U& value) const
-
-    {
+    constexpr auto operator-(const U& value) const {
         poly result = *this;
         result[0] -= static_cast<T>(value);
         return result;
@@ -216,38 +210,37 @@ template <typename T, std::size_t N = 0> class poly {
 
     // Funkcja pomocnicza dla at(...)
     template <typename U>
-    constexpr U pow(const T& init, const U& base, std::size_t exp) const 
-    requires std::convertible_to<U, T> {
-   		U res = init;
-   		for (std::size_t i = 0; i < exp; ++i) {
-   			res *= base;
-   		}
-   		return res;
-   	}
-   	
-   	// k == 0
-   	constexpr const poly<T>& at() const {
-    	return *this;
+        requires std::convertible_to<U, T>
+    constexpr U pow(const T& init, const U& base, std::size_t exp) const {
+        U res = init;
+        for (std::size_t i = 0; i < exp; ++i) {
+            res *= base;
+        }
+        return res;
     }
+
+    // k == 0
+    constexpr const poly<T>& at() const { return *this; }
 
     // k == 0
     constexpr const poly<T>& at() { return *this; }
 
     // k == 1
     template <typename U>
-    constexpr U at(const U& arg) const
-    requires std::convertible_to<U, T> {
-    	U res = T{};
-		for (std::size_t i = 0; i < N; ++i) {
-			res += pow(this->coefs[i], arg, i);
-    	}
-    	return res;
+        requires std::convertible_to<U, T>
+    constexpr U at(const U& arg) const {
+        U res = T{};
+        for (std::size_t i = 0; i < N; ++i) {
+            res += pow(this->coefs[i], arg, i);
+        }
+        return res;
     }
 
     // k > 1
     template <typename U, typename... Args>
-    constexpr auto at(const U& first, Args&&... args) const
-    requires (std::convertible_to<U, T> && (std::convertible_to<Args, T> && ...)) {
+        requires(std::convertible_to<U, T> &&
+                 (std::convertible_to<Args, T> && ...))
+    constexpr auto at(const U& first, Args&&... args) const {
         if (N == 1) {
             // "nadmiarowe argumenty są ignorowane, gdyż zmienne
             // xi dla i>n po prostu nie występują w wielomianie."
@@ -296,21 +289,20 @@ constexpr auto const_poly(const poly<U, M>& p) {
     return poly<poly<U, M>, 1>{p};
 }
 
-
 // std::common_type specialization
 namespace std {
-    template <typename T, std::size_t N, typename U, std::size_t M>
-    struct common_type<poly<T, N>, poly<U, M>> {
-        using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
-    };
+template <typename T, std::size_t N, typename U, std::size_t M>
+struct common_type<poly<T, N>, poly<U, M>> {
+    using type = poly<std::common_type_t<T, U>, std::max(N, M)>;
+};
 
-    template <typename T, std::size_t N, typename U>
-    struct common_type<poly<T, N>, U> {
-        using type = poly<std::common_type_t<T, U>, N>;
-    };
+template <typename T, std::size_t N, typename U>
+struct common_type<poly<T, N>, U> {
+    using type = poly<std::common_type_t<T, U>, N>;
+};
 
-    template <typename T, typename U, std::size_t M>
-    struct common_type<T, poly<U, M>> {
-        using type = poly<std::common_type_t<T, U>, M>;
-    };
-}
+template <typename T, typename U, std::size_t M>
+struct common_type<T, poly<U, M>> {
+    using type = poly<std::common_type_t<T, U>, M>;
+};
+} // namespace std

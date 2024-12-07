@@ -38,8 +38,8 @@ int main() {
     static_assert(p - q == poly(poly(1.0, -2.0), -2.0, -4.0));
     static_assert(q - p == poly(poly(-1.0, 2.0), 2.0, 4.0));
 
-    constexpr auto xd = p * q;
-    constexpr auto dx = poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0);
+    // constexpr auto xd = p * q;
+    // constexpr auto dx = poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0);
 
     static_assert(std::is_same_v<decltype(p * q), poly<poly<double, 2>, 4>>);
     static_assert(p * q == poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0));
