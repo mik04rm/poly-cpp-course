@@ -24,6 +24,21 @@
 template <typename U, typename T, std::size_t M, std::size_t N>
 concept PolyConvertible = (M <= N) && std::is_convertible_v<U, T>;
 
+// To be able to use the "poly" type name before its definition
+template <typename T, std::size_t N> class poly;
+
+// For recursive deduction of the base type of poly<...>
+template <typename T>
+struct BaseType {
+    using type = T;
+};
+template <typename T, std::size_t N>
+struct BaseType<poly<T, N>> {
+    using type = typename BaseType<T>::type;
+};
+template <typename T>
+using base_type = typename BaseType<T>::type;
+
 template <typename T, std::size_t N = 0> class poly {
 
   private:
