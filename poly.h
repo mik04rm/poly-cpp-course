@@ -226,7 +226,7 @@ template <typename T, std::size_t N = 0> class poly {
     // k == 1
     template <typename U>
     constexpr T at(const U& arg)
-    requires ConvertibleTo<T, U> {
+    requires std::convertible_to<U, T> {
     	T res = T{};
 		for (std::size_t i = 0; i < N; ++i) {
     		res += pow(this->coefs[i], arg, i);
@@ -237,7 +237,7 @@ template <typename T, std::size_t N = 0> class poly {
    	// k > 1
     template <typename U, typename... Args>
     constexpr auto at(const U& first, Args&&... args)
-    requires (ConvertibleTo<U, T> && (ConvertibleTo<Args, T> && ...)) {
+    requires (std::convertible_to<U, T> && (std::convertible_to<Args, T> && ...)) {
         if (N == 1) {
        		// "nadmiarowe argumenty są ignorowane, gdyż zmienne 
        		// xi dla i>n po prostu nie występują w wielomianie."
