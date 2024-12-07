@@ -210,8 +210,10 @@ template <typename T, std::size_t N = 0> class poly {
     }
 
     // Funkcja pomocnicza dla at(...)
-    constexpr T pow(const T& init, const T& base, std::size_t exp) {
-   		T res = init;
+    template <typename U>
+    constexpr U pow(const T& init, const U& base, std::size_t exp) const 
+    requires std::convertible_to<U, T> {
+   		U res = init;
    		for (std::size_t i = 0; i < exp; ++i) {
    			res *= base;
    		}
@@ -219,24 +221,24 @@ template <typename T, std::size_t N = 0> class poly {
    	}
    	
    	// k == 0
-   	constexpr const poly<T>& at() {
+   	constexpr const poly<T>& at() const {
     	return *this;
     }
     
     // k == 1
     template <typename U>
-    constexpr T at(const U& arg)
+    constexpr U at(const U& arg) const
     requires std::convertible_to<U, T> {
-    	T res = T{};
+    	U res = T{};
 		for (std::size_t i = 0; i < N; ++i) {
-    		res += pow(this->coefs[i], arg, i);
+			res += pow(this->coefs[i], arg, i);
     	}
     	return res;
     }
    	
    	// k > 1
     template <typename U, typename... Args>
-    constexpr auto at(const U& first, Args&&... args)
+    constexpr auto at(const U& first, Args&&... args) const
     requires (std::convertible_to<U, T> && (std::convertible_to<Args, T> && ...)) {
         if (N == 1) {
        		// "nadmiarowe argumenty są ignorowane, gdyż zmienne 
