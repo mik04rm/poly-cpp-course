@@ -76,6 +76,9 @@ int main() {
     static_assert(x[1][1] == 2.0);
     static_assert(x[2][0] == 4.0);
     static_assert(x[2][1] == 0.0);
+
+    static_assert(q * 2 == poly(poly(2.0, 4.0), 6.0, 8.0));
+    static_assert(2 * q == q * 2);
     
 }
 
