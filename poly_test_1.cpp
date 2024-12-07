@@ -51,6 +51,7 @@ namespace
     static_assert(std::is_same_v<decltype(p * q), poly<poly<double, 2>, 4>>);
     static_assert(p * q == poly(poly(2.0, 4.0), poly(7.0, 2.0), 11.0, 4.0));
     static_assert(cross(p, q) == poly(2.0 * q, q));
+    constexpr auto xdd = cross(q, p);
     static_assert(cross(q, p) == poly(poly(p, 2.0 * p), const_poly(3.0 * p), const_poly(4.0 * p)));
 
     constexpr auto pp(p);

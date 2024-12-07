@@ -26,11 +26,14 @@ concept PolyConvertible = (M <= N) && std::is_convertible_v<U, T>;
 
 template <typename T, std::size_t N = 0> class poly {
 
+
   private:
     std::array<T, N> coefs{};
 
   public:
-    constexpr poly() { DBG_PRINT("empty constructor called"); }
+    
+    constexpr poly(const poly& other) = default;
+    constexpr poly() = default;
 
     template <typename U, std::size_t M>
         requires PolyConvertible<U, T, M, N>
@@ -42,7 +45,7 @@ template <typename T, std::size_t N = 0> class poly {
     }
 
     template <typename U, std::size_t M>
-        requires PolyConvertible<U, T, M, N>
+        // requires PolyConvertible<U, T, M, N>
     constexpr poly(poly<U, M>&& other) {
         DBG_PRINT("move constructor called");
         for (std::size_t i = 0; i < M; i++) {
@@ -72,7 +75,7 @@ template <typename T, std::size_t N = 0> class poly {
 
     // Copy assignment operator
     template <typename U, std::size_t M>
-        requires PolyConvertible<U, T, M, N>
+        // requires PolyConvertible<U, T, M, N>
     constexpr poly& operator=(const poly<U, M>& other) {
         DBG_PRINT("copy assignment operator called");
         for (std::size_t i = 0; i < M; i++) {
@@ -83,7 +86,7 @@ template <typename T, std::size_t N = 0> class poly {
 
     // Move assignment operator
     template <typename U, std::size_t M>
-        requires PolyConvertible<U, T, M, N>
+        // requires PolyConvertible<U, T, M, N>
     constexpr poly& operator=(poly<U, M>&& other) {
         DBG_PRINT("move assignment operator called");
         for (std::size_t i = 0; i < M; i++) {
@@ -93,7 +96,7 @@ template <typename T, std::size_t N = 0> class poly {
     }
 
     template <typename U, std::size_t M>
-        requires PolyConvertible<U, T, M, N>
+        // requires PolyConvertible<U, T, M, N>
     constexpr poly& operator+=(const poly<U, M>& other) {
         DBG_PRINT("operator+= for poly called");
         for (std::size_t i = 0; i < M; i++) {
@@ -122,7 +125,7 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U, std::size_t M>
         requires PolyConvertible<U, T, M, N>
     constexpr poly& operator-=(const poly<U, M>& other) {
-        DBG_PRINT("operator+= for poly called");
+        DBG_PRINT("operator-= for poly called");
         for (std::size_t i = 0; i < M; i++) {
             coefs[i] -= static_cast<T>(other[i]);
         }
@@ -280,8 +283,9 @@ constexpr auto operator-(const U& value, const poly<T, N>& poly_obj) {
 
 // Deduction guide for deducing T and N
 // perfect forwarding of arguments
-template <typename... Args>
-poly(Args&&...) -> poly<std::common_type_t<Args...>, sizeof...(Args)>;
+
+template <typename T, typename... Args>
+poly(T&&, Args&&...) -> poly<T, 1 + sizeof...(Args)>;
 
 template <typename U, std::size_t M>
 constexpr auto const_poly(const poly<U, M>& p) {
@@ -306,3 +310,37 @@ struct common_type<T, poly<U, M>> {
     using type = poly<std::common_type_t<T, U>, M>;
 };
 } // namespace std
+
+
+template <typename T1, std::size_t N1, typename T2, std::size_t N2>
+constexpr auto cross(const poly<T1, N1>& p, const poly<T2, N2>& q) {
+    constexpr std::size_t N = N1;
+    poly<decltype(cross(p[0], q)), N> result{};
+    for (std::size_t i = 0; i < N1; ++i) {
+        result[i] = cross(p[i], q);
+    }
+    return result;
+}
+
+template <typename T1, std::size_t N1, typename T2>
+constexpr auto cross(const poly<T1, N1>& p, const T2& q) {
+    poly<decltype(p[0] * q), N1> result{};
+    for (std::size_t i = 0; i < N1; ++i) {
+        result[i] = p[i] * q;
+    }
+    return result;
+}
+
+template <typename T1, typename T2, std::size_t N2>
+constexpr auto cross(const T1& p, const poly<T2, N2>& q) {
+    poly<decltype(p * q[0]), N2> result{};
+    for (std::size_t i = 0; i < N2; ++i) {
+        result[i] = p * q[i];
+    }
+    return result;
+}
+
+template <typename T1, typename T2>
+constexpr auto cross(const T1& a, const T2& b) {
+    return a * b;
+}
