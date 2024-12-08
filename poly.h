@@ -241,38 +241,87 @@ template <typename T, std::size_t N = 0> class poly {
         return result;
     }
 
-        // Funkcja pomocnicza dla at(...)
     template <typename U>
-    constexpr U pow(const T& init, const U& base, std::size_t exp) const 
-    requires std::convertible_to<base_type<U>, T> {
-   		U res = init;
-   		for (std::size_t i = 0; i < exp; ++i) {
-   			res *= base;
+    requires std::convertible_to<U, T>
+    static constexpr U eval_term(const T& coef, const U& pow_base, std::size_t pow_exp) {
+   		U res = coef;
+		for (std::size_t i = 1; i <= pow_exp; ++i) {
+   			res *= pow_base;
    		}
    		return res;
    	}
    	
+   	template <typename U, std::size_t M>
+   	requires std::convertible_to<base_type<U>, T>
+   	static auto eval_term(const T& coef, const poly<U, M>& pow_base, std::size_t pow_exp) {
+   		constexpr std::size_t res_size = (N-1)*(M-1) + 1;
+        using res_type = poly<std::common_type_t<T, U>, res_size>;
+        res_type res(coef);
+    	
+    	for (std::size_t i = 1; i <= pow_exp; ++i) {
+    		res *= pow_base;
+    	}
+    	
+    	return res;
+   	}
+   	
    	// k == 0
-   	constexpr const poly<T>& at() const {
+   	constexpr const poly<T, N>& at() const {
     	return *this;
     }
     
     // k == 1
     template <typename U>
-    constexpr U at(const U& arg) const
-    requires std::convertible_to<base_type<U>, T> {
+    requires std::convertible_to<U, T>
+    U at(const U& arg) const {
+    	printuj("Liczymy ", *this, " .at( ");
+    	printuj("", arg, " ):\n\n");
+    	
     	if (N == 0) {
     		return T{};
     	}
     	
-    	U res = this->coefs[0];
+    	U res = this->coefs[0]; 
+    	printuj("Początkowa wartość: ", res, "\n");
+    	
 		for (std::size_t i = 1; i < N; ++i) {
-			res += pow(this->coefs[i], arg, i);
+			U term = eval_term(this->coefs[i], arg, i);
+			printuj(" dodajemy: ", term, "\n");
+			
+			res += term;
+			printuj("  i wychodzi: ", res, "\n");
     	}
+    	
+    	return res;
+    }
+    
+    template <typename U, std::size_t M>
+    requires std::convertible_to<base_type<U>, T>
+    auto at(const poly<U, M>& arg) const {
+       	printuj("Liczymy ", *this, " .at( ");
+    	printuj("", arg, " ):\n\n");
+    	    	
+    	constexpr std::size_t res_size = (N-1)*(M-1) + 1;
+        using res_type = poly<std::common_type_t<T, U>, res_size>;
+        
+        if (N == 0) {
+    		return res_type();
+    	}
+        res_type res(this->coefs[0]);
+    	printuj("Początkowa wartość: ", res, "\n");
+    	
+    	for (std::size_t i = 1; i < N; ++i) {
+			auto term = eval_term(this->coefs[i], arg, i);
+			printuj(" dodajemy: ", term, "\n");
+			
+			res += term;
+			printuj("  i wychodzi: ", res, "\n");
+    	}
+    	
     	return res;
     }
    	
-   	// k > 1
+    // k > 1
     template <typename U, typename... Args>
     constexpr U at(const U& first, Args&&... args) const
     requires (std::convertible_to<base_type<U>, T> && (std::convertible_to<base_type<Args>, T> && ...)) {
