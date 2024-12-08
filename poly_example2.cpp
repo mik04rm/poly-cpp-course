@@ -13,21 +13,25 @@ template <typename T, std::size_t N>
 
 int main() {
     constexpr auto p = poly(2, 1);
-     std::cout << "-----------------------------------" << std::endl;
-    auto q = poly(p, p, p);
-     std::cout << "-----------------------------------" << std::endl;
-    auto r = poly(poly(2, 1), poly(2, 1), poly(2, 1));
-    // poly x(p);
+    std::cout << "-----------------------------------" << std::endl;
+    constexpr auto q = poly(p, p, p);
+    static_assert(std::is_same_v<decltype(q), const poly<poly<int, 2>, 3>>);
+    static_assert(q == poly(poly(2, 1), poly(2, 1), poly(2, 1)));
+    std::cout << "-----------------------------------" << std::endl;
+    constexpr auto r = poly(poly(2, 1), poly(2, 1), poly(2, 1));
 
-    std::common_type_t<poly<int,2>, poly<int,2>> a;
+    static_assert(r == q);
+
     constexpr auto y = poly(poly(1.0, 2.0), 3.0, 4.0);
     constexpr auto x = poly(2 * y, y);
-
-    constexpr auto z = poly(poly(1.0, 2.0), 3.0, 4.0);
+    static_assert(x == poly(poly(poly(2.0, 4.0), 6.0, 8.0), poly(poly(1.0, 2.0), 3.0, 4.0)));
 
     constexpr auto w = const_poly(2 * y);
-
+    static_assert(w[0] == poly(poly(2.0, 4.0), 6.0, 8.0));
+    static_assert(w.size() == 1);
+  
     constexpr auto v = 2.5 * p;
+    static_assert(v == poly(5, 2.5));
 
 
 }

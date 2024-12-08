@@ -45,7 +45,6 @@ template <typename T, std::size_t N = 0> class poly {
     std::array<T, N> coefs{};
 
   public:
-    constexpr poly(const poly& other) = default;
     constexpr poly() = default;
 
     template <typename U, std::size_t M>
@@ -76,7 +75,7 @@ template <typename T, std::size_t N = 0> class poly {
 
     template <typename... Args>
         requires(sizeof...(Args) >= 2 && sizeof...(Args) <= N && (std::convertible_to<Args, T> && ...))
-    constexpr poly(Args&&... args) : coefs{std::forward<Args>(args)...} {
+    constexpr poly(Args&&... args) : coefs{static_cast<T>(std::forward<Args>(args))...} {
         DBG_PRINT("variadic constructor called");
     }
 
