@@ -308,26 +308,22 @@ template <typename T, std::size_t N = 0> class poly {
     	return res;
     }
    	
-    // k > 1
-    template <typename U, typename... Args>
-    constexpr U at(const U& first, Args&&... args) const
-    requires (std::convertible_to<base_type<U>, T> && (std::convertible_to<base_type<Args>, T> && ...)) {
-        if (N == 0) {
-        	return T{};
-        }
-        
-        if (N == 1) {
-       		// "nadmiarowe argumenty są ignorowane, gdyż zmienne 
-       		// xi dla i>n po prostu nie występują w wielomianie."
+	template <typename U, typename... Args>
+	constexpr auto at(const U& first, Args&&... args) const
+	requires (std::convertible_to<base_type<U>, T> && (std::convertible_to<base_type<Args>, T> && ...)) {
+    	if (N <= 1) {
         	return this->at(first);
-        }
-        
-        U result = this->coefs[0];
-		for (std::size_t i = 1; i < N; ++i) {
-    		result += this->coefs[i].at(args...) * pow(first, i);
-		}
-		return result;
-    }
+    	}
+	
+    	using result_type = decltype(this->coefs[0].at(args...));
+    	result_type result = this->coefs[0].at(args...);
+	
+    	for (std::size_t i = 1; i < N; ++i) {
+        	result += this->coefs[i].at(args...) * pow(first, i);
+    	}
+	
+    	return result;
+	}
 };
 
 // Non-member operator* for scalar multiplication. 
