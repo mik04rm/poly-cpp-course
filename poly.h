@@ -255,17 +255,17 @@ template <typename T, std::size_t N = 0> class poly {
     	return *this;
     }
 
-    template <typename U>
+	template <typename U>
     requires std::convertible_to<U, T>
-    constexpr U at(const U& arg) const {
+    constexpr std::common_type_t<T, U> at(const U& arg) const {
     	if (N == 0) {
     		return T{};
     	}
     	
-    	U res = this->coefs[0];
+    	std::common_type_t<T, U> res = this->coefs[0];
     	
 		for (std::size_t i = 1; i < N; ++i) {
-			U term = eval_term(this->coefs[i], arg, i);
+			std::common_type_t<T, U> term = eval_term(this->coefs[i], arg, i);
 			res += term;
     	}
     	
