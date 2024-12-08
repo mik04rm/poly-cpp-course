@@ -24,6 +24,21 @@
 template <typename U, typename T, std::size_t M, std::size_t N>
 concept PolyConvertible = (M <= N) && std::is_convertible_v<U, T>;
 
+// To be able to use the "poly" type name before its definition
+template <typename T, std::size_t N> class poly;
+
+// For recursive deduction of the base type of poly<...>
+template <typename T>
+struct BaseType {
+    using type = T;
+};
+template <typename T, std::size_t N>
+struct BaseType<poly<T, N>> {
+    using type = typename BaseType<T>::type;
+};
+template <typename T>
+using base_type = typename BaseType<T>::type;
+
 template <typename T, std::size_t N = 0> class poly {
 
   private:
@@ -209,50 +224,56 @@ template <typename T, std::size_t N = 0> class poly {
         return result;
     }
 
-    // Funkcja pomocnicza dla at(...)
+        // Funkcja pomocnicza dla at(...)
     template <typename U>
-        requires std::convertible_to<U, T>
-    constexpr U pow(const T& init, const U& base, std::size_t exp) const {
-        U res = init;
-        for (std::size_t i = 0; i < exp; ++i) {
-            res *= base;
-        }
-        return res;
+    constexpr U pow(const T& init, const U& base, std::size_t exp) const 
+    requires std::convertible_to<base_type<U>, T> {
+   		U res = init;
+   		for (std::size_t i = 0; i < exp; ++i) {
+   			res *= base;
+   		}
+   		return res;
+   	}
+   	
+   	// k == 0
+   	constexpr const poly<T>& at() const {
+    	return *this;
     }
-
-    // k == 0
-    constexpr const poly<T>& at() const { return *this; }
-
-    // k == 0
-    constexpr const poly<T>& at() { return *this; }
-
+    
     // k == 1
     template <typename U>
-        requires std::convertible_to<U, T>
-    constexpr U at(const U& arg) const {
-        U res = T{};
-        for (std::size_t i = 0; i < N; ++i) {
-            res += pow(this->coefs[i], arg, i);
-        }
-        return res;
+    constexpr U at(const U& arg) const
+    requires std::convertible_to<base_type<U>, T> {
+    	if (N == 0) {
+    		return T{};
+    	}
+    	
+    	U res = this->coefs[0];
+		for (std::size_t i = 1; i < N; ++i) {
+			res += pow(this->coefs[i], arg, i);
+    	}
+    	return res;
     }
-
-    // k > 1
+   	
+   	// k > 1
     template <typename U, typename... Args>
-        requires(std::convertible_to<U, T> &&
-                 (std::convertible_to<Args, T> && ...))
-    constexpr auto at(const U& first, Args&&... args) const {
+    constexpr U at(const U& first, Args&&... args) const
+    requires (std::convertible_to<base_type<U>, T> && (std::convertible_to<base_type<Args>, T> && ...)) {
+        if (N == 0) {
+        	return T{};
+        }
+        
         if (N == 1) {
-            // "nadmiarowe argumenty są ignorowane, gdyż zmienne
-            // xi dla i>n po prostu nie występują w wielomianie."
-            return this->at(first);
+       		// "nadmiarowe argumenty są ignorowane, gdyż zmienne 
+       		// xi dla i>n po prostu nie występują w wielomianie."
+        	return this->at(first);
         }
-
-        T result = T{};
-        for (std::size_t i = 0; i < N; ++i) {
-            result += this->coefs[i].at(args...) * pow(first, i);
-        }
-        return result;
+        
+        U result = this->coefs[0];
+		for (std::size_t i = 1; i < N; ++i) {
+    		result += this->coefs[i].at(args...) * pow(first, i);
+		}
+		return result;
     }
 };
 
