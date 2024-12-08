@@ -243,8 +243,8 @@ template <typename T, std::size_t N = 0> class poly {
 
     template <typename U>
     requires std::convertible_to<U, T>
-    static constexpr U eval_term(const T& coef, const U& pow_base, std::size_t pow_exp) {
-   		U res = coef;
+    static constexpr std::common_type_t<T, U> eval_term(const T& coef, const U& pow_base, std::size_t pow_exp) {
+   		std::common_type_t<T, U> res = coef;
 		for (std::size_t i = 1; i <= pow_exp; ++i) {
    			res *= pow_base;
    		}
