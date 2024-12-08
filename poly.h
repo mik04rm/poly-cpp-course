@@ -250,27 +250,11 @@ template <typename T, std::size_t N = 0> class poly {
    		}
    		return res;
    	}
-   	
-   	template <typename U, std::size_t M>
-   	requires std::convertible_to<base_type<U>, T>
-   	static constexpr auto eval_term(const T& coef, const poly<U, M>& pow_base, std::size_t pow_exp) {
-   		constexpr std::size_t res_size = (N-1)*(M-1) + 1;
-        using res_type = poly<std::common_type_t<T, U>, res_size>;
-        res_type res(coef);
-    	
-    	for (std::size_t i = 1; i <= pow_exp; ++i) {
-    		res *= pow_base;
-    	}
-    	
-    	return res;
-   	}
-   	
-   	// k == 0
+
    	constexpr const poly<T, N>& at() const {
     	return *this;
     }
-    
-    // k == 1
+
     template <typename U>
     requires std::convertible_to<U, T>
     constexpr U at(const U& arg) const {
@@ -278,7 +262,7 @@ template <typename T, std::size_t N = 0> class poly {
     		return T{};
     	}
     	
-    	U res = this->coefs[0]; 
+    	U res = this->coefs[0];
     	
 		for (std::size_t i = 1; i < N; ++i) {
 			U term = eval_term(this->coefs[i], arg, i);
@@ -298,11 +282,28 @@ template <typename T, std::size_t N = 0> class poly {
     		return res_type();
     	}
         res_type res(this->coefs[0]);
-    	
+        
     	for (std::size_t i = 1; i < N; ++i) {
-			auto term = eval_term(this->coefs[i], arg, i);
-			res += term;
-    	}
+    		res_type term(arg);
+    		
+    		for (std::size_t exp = 1; exp < i; ++exp) {
+        		res_type temp_result{};
+        		for (std::size_t k = 0; k < term.size(); ++k) {
+            		for (std::size_t j = 0; j < arg.size(); ++j) {
+                		if (k + j < temp_result.size()) {
+                    		temp_result[k + j] += term[k] * arg[j];
+                		}
+            		}
+        		}
+        		term = temp_result;
+    		}
+    		
+    		for (std::size_t k = 0; k < term.size(); ++k) {
+        		term[k] *= this->coefs[i];
+    		}
+    		
+    		res += term;
+		}
     	
     	return res;
     }
