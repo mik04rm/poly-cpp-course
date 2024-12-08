@@ -99,7 +99,7 @@ template <typename T, std::size_t N = 0> class poly {
 
     // Move assignment operator
     template <typename U, std::size_t M>
-    // requires PolyConvertible<U, T, M, N>
+        requires PolyConvertible<U, T, M, N>
     constexpr poly& operator=(poly<U, M>&& other) {
         DBG_PRINT("move assignment operator called");
         for (std::size_t i = 0; i < M; i++) {
@@ -109,7 +109,7 @@ template <typename T, std::size_t N = 0> class poly {
     }
 
     template <typename U, std::size_t M>
-    // requires PolyConvertible<U, T, M, N>
+        requires PolyConvertible<U, T, M, N>
     constexpr poly& operator+=(const poly<U, M>& other) {
         DBG_PRINT("operator+= for poly called");
         for (std::size_t i = 0; i < M; i++) {
@@ -198,9 +198,8 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr auto operator*(const U& value) const {
-        poly result = *this;
+        poly<std::common_type_t<U, T>, N> result = *this;
         for (std::size_t i = 0; i < N; i++) {
-            // result[i] = result[i] * value;
             result[i] *= value;
         }
         return result;
@@ -210,8 +209,8 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr auto operator+(const U& value) const {
-        poly result = *this;
-        result[0] += static_cast<T>(value);
+        poly<std::common_type_t<U, T>, N> result = *this;
+        result[0] += value;
         return result;
     }
 
@@ -219,8 +218,8 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr auto operator-(const U& value) const {
-        poly result = *this;
-        result[0] -= static_cast<T>(value);
+        poly<std::common_type_t<U, T>, N> result = *this;
+        result[0] -= value;
         return result;
     }
 
@@ -280,24 +279,22 @@ template <typename T, std::size_t N = 0> class poly {
 // Non-member operator* for scalar multiplication (commutative property)
 template <typename T, std::size_t N, typename U>
     requires std::convertible_to<U, T>
-constexpr auto operator*(const U& value, const poly<T, N>& poly_obj) {
-    return poly_obj * value;
+constexpr auto operator*(const U& value, const poly<T, N>& p) {
+    return p * value;
 }
 
 // Non-member operator+ for scalar addition (commutative property)
 template <typename T, std::size_t N, typename U>
     requires std::convertible_to<U, T>
-constexpr auto operator+(const U& value, const poly<T, N>& poly_obj) {
-    return poly_obj + value;
+constexpr auto operator+(const U& value, const poly<T, N>& p) {
+    return p + value;
 }
 
 // Non-member operator- for scalar subtraction (commutative property)
 template <typename T, std::size_t N, typename U>
     requires std::convertible_to<U, T>
-constexpr auto operator-(const U& value, const poly<T, N>& poly_obj) {
-    poly<T, N> result = poly_obj;
-    result[0] = static_cast<T>(value) - result[0];
-    return result;
+constexpr auto operator-(const U& value, const poly<T, N>& p) {
+    return -(p - value);
 }
 
 // Deduction guide for deducing T and N

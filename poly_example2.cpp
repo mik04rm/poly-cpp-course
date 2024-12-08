@@ -12,7 +12,7 @@ template <typename T, std::size_t N>
   }
 
 int main() {
-    auto p = poly(2, 1);
+    constexpr auto p = poly(2, 1);
      std::cout << "-----------------------------------" << std::endl;
     auto q = poly(p, p, p);
      std::cout << "-----------------------------------" << std::endl;
@@ -20,10 +20,15 @@ int main() {
     // poly x(p);
 
     std::common_type_t<poly<int,2>, poly<int,2>> a;
-    auto y = poly(poly(1.0, 2.0), 3.0, 4.0);
-    auto x = poly(2 * y, y);
+    constexpr auto y = poly(poly(1.0, 2.0), 3.0, 4.0);
+    constexpr auto x = poly(2 * y, y);
 
     constexpr auto z = poly(poly(1.0, 2.0), 3.0, 4.0);
+
+    constexpr auto w = const_poly(2 * y);
+
+    constexpr auto v = 2.5 * p;
+
 
 }
 
