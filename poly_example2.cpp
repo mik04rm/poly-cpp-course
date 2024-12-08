@@ -34,6 +34,13 @@ int main() {
     static_assert(v == poly(5, 2.5));
 
 
+    auto pp = poly(2, 1);
+
+    auto qq = poly(poly(1.0, 2.0), 3.0, 4.0);
+
+    qq *= 2;
+
+
 }
 
 // clang++ -Wall -Wextra -std=c++20 -O2 poly_example2.cpp

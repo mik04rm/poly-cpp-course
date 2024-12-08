@@ -18,17 +18,13 @@
 #define DBG_PRINT(x)
 #endif
 
-// TODO when N or M is 0 operators should return poly<T, 0>
-// TODO maybe hide some things in the details namespace
-// TODO probably some of the static_cast and convertible_to are wrong
-
 template <typename U, typename T, std::size_t M, std::size_t N>
 concept PolyConvertible = (M <= N) && std::is_convertible_v<U, T>;
 
 // To be able to use the "poly" type name before its definition
 template <typename T, std::size_t N> class poly;
 
-// For recursive deduction of the base type of poly<...>
+// For recursive deduction of the base type of poly<...>.
 template <typename T>
 struct BaseType {
     using type = T;
@@ -82,25 +78,22 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U, std::size_t M>
         requires PolyConvertible<U, T, M, N>
     constexpr poly(const poly<U, M>& other) {
-        DBG_PRINT("copy constructor called");
         for (std::size_t i = 0; i < M; i++) {
-            this->coefs[i] = static_cast<T>(other[i]);
+            this->coefs[i] = other[i];
         }
     }
 
     template <typename U, std::size_t M>
-    requires PolyConvertible<U, T, M, N>
+        requires PolyConvertible<U, T, M, N>
     constexpr poly(poly<U, M>&& other) {
-        DBG_PRINT("move constructor called");
         for (std::size_t i = 0; i < M; i++) {
-            this->coefs[i] = static_cast<T>(std::move(other[i]));
+            this->coefs[i] = std::move(other[i]);
         }
     }
 
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr poly(U&& arg) {
-        DBG_PRINT("single constructor called");
         static_assert(N >= 1, "N cannot be smaller than 1");
         this->coefs[0] = std::forward<U>(arg);
     }
@@ -108,7 +101,6 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename... Args>
         requires(sizeof...(Args) >= 2 && sizeof...(Args) <= N && (std::convertible_to<Args, T> && ...))
     constexpr poly(Args&&... args) : coefs{static_cast<T>(std::forward<Args>(args))...} {
-        DBG_PRINT("variadic constructor called");
     }
 
     constexpr std::size_t size() const { return N; }
@@ -117,22 +109,20 @@ template <typename T, std::size_t N = 0> class poly {
 
     constexpr const T& operator[](std::size_t i) const { return coefs[i]; }
 
-    // Copy assignment operator
+    // Copy assignment operator.
     template <typename U, std::size_t M>
-    // requires PolyConvertible<U, T, M, N>
+        requires PolyConvertible<U, T, M, N>
     constexpr poly& operator=(const poly<U, M>& other) {
-        DBG_PRINT("copy assignment operator called");
         for (std::size_t i = 0; i < M; i++) {
-            coefs[i] = static_cast<T>(other[i]);
+            coefs[i] = other[i];
         }
         return *this;
     }
 
-    // Move assignment operator
+    // Move assignment operator.
     template <typename U, std::size_t M>
         requires PolyConvertible<U, T, M, N>
     constexpr poly& operator=(poly<U, M>&& other) {
-        DBG_PRINT("move assignment operator called");
         for (std::size_t i = 0; i < M; i++) {
             coefs[i] = std::move(other[i]);
         }
@@ -142,9 +132,8 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U, std::size_t M>
         requires PolyConvertible<U, T, M, N>
     constexpr poly& operator+=(const poly<U, M>& other) {
-        DBG_PRINT("operator+= for poly called");
         for (std::size_t i = 0; i < M; i++) {
-            coefs[i] += static_cast<T>(other[i]);
+            coefs[i] += other[i];
         }
         return *this;
     }
@@ -152,8 +141,7 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr poly& operator+=(const U& other) {
-        DBG_PRINT("operator+= for U called");
-        coefs[0] += static_cast<T>(other);
+        coefs[0] += other;
         return *this;
     }
 
@@ -169,9 +157,8 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U, std::size_t M>
         requires PolyConvertible<U, T, M, N>
     constexpr poly& operator-=(const poly<U, M>& other) {
-        DBG_PRINT("operator-= for poly called");
         for (std::size_t i = 0; i < M; i++) {
-            coefs[i] -= static_cast<T>(other[i]);
+            coefs[i] -= other[i];
         }
         return *this;
     }
@@ -179,8 +166,7 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr poly& operator-=(const U& other) {
-        DBG_PRINT("operator-= for U called");
-        coefs[0] -= static_cast<T>(other);
+        coefs[0] -= other;
         return *this;
     }
 
@@ -193,7 +179,6 @@ template <typename T, std::size_t N = 0> class poly {
         return result;
     }
 
-    // Unary minus operator
     constexpr auto operator-() const {
         poly<T, N> result{};
         for (std::size_t i = 0; i < N; i++) {
@@ -205,7 +190,6 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U>
         requires std::convertible_to<U, T>
     constexpr poly& operator*=(const U& other) {
-        DBG_PRINT("operator*= for U called");
         for (std::size_t i = 0; i < N; i++) {
             coefs[i] *= other;
         }
@@ -215,6 +199,9 @@ template <typename T, std::size_t N = 0> class poly {
     template <typename U, std::size_t M>
         requires std::is_convertible_v<T, U> || std::is_convertible_v<U, T>
     constexpr auto operator*(const poly<U, M>& other) const {
+        if constexpr (N == 0 || M == 0) {
+            return poly<std::common_type_t<T, U>, 0>{};
+        }
         constexpr std::size_t res_size = N + M - 1;
         poly<std::common_type_t<T, U>, res_size> result{};
         for (std::size_t i = 0; i < N; i++) {
@@ -307,36 +294,33 @@ template <typename T, std::size_t N = 0> class poly {
     }
 };
 
-// Non-member operator* for scalar multiplication (commutative property)
+// Non-member operator* for scalar multiplication. 
 template <typename T, std::size_t N, typename U>
     requires std::convertible_to<U, T>
 constexpr auto operator*(const U& value, const poly<T, N>& p) {
     return p * value;
 }
 
-// Non-member operator+ for scalar addition (commutative property)
+// Non-member operator+ for scalar addition. 
 template <typename T, std::size_t N, typename U>
     requires std::convertible_to<U, T>
 constexpr auto operator+(const U& value, const poly<T, N>& p) {
     return p + value;
 }
 
-// Non-member operator- for scalar subtraction (commutative property)
+// Non-member operator- for scalar subtraction. 
 template <typename T, std::size_t N, typename U>
     requires std::convertible_to<U, T>
 constexpr auto operator-(const U& value, const poly<T, N>& p) {
     return -(p - value);
 }
 
-// Deduction guide for deducing T and N
-// perfect forwarding of arguments
-
-
 template <typename U, std::size_t M>
 constexpr auto const_poly(const poly<U, M>& p) {
     DBG_PRINT("const_poly constructor called");
     return poly<poly<U, M>, 1>{p};
 }
+namespace detail {
 
 template <typename T> struct is_poly_impl : std::false_type {};
 
@@ -348,8 +332,9 @@ struct is_poly : is_poly_impl<std::remove_cvref_t<T>> {};
 
 template <typename T>
 inline constexpr bool is_poly_v = is_poly<T>::value;
+} // namespace detail
 
-// std::common_type specialization
+// std::common_type specialization for poly.
 namespace std {
 
 template <typename T, std::size_t N, typename U, std::size_t M>
@@ -358,13 +343,13 @@ struct common_type<poly<T, N>, poly<U, M>> {
 };
 
 template <typename T, std::size_t N, typename U>
-    requires (!is_poly_v<U>)
+    requires (!detail::is_poly_v<U>)
 struct common_type<poly<T, N>, U> {
     using type = poly<std::common_type_t<T, U>, N>;
 };
 
 template <typename T, typename U, std::size_t M>
-    requires (!is_poly_v<T>)
+    requires (!detail::is_poly_v<T>)
 struct common_type<T, poly<U, M>> {
     using type = poly<std::common_type_t<T, U>, M>;
 };

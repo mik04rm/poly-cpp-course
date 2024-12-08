@@ -79,6 +79,7 @@ int main() {
     constexpr auto t = (poly<poly<int, 1>, 1>)2;
     static_assert(t[0][0] == 2);
     
+
 }
 
 // clang++ -Wall -Wextra -std=c++20 -O2 poly_example.cpp
