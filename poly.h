@@ -324,6 +324,21 @@ template <typename T, std::size_t N = 0> class poly {
 	
     	return result;
 	}
+
+	template <typename P, typename U, std::size_t K>
+    static constexpr auto at_array(const P& p, const std::array<U, K>& arr) {
+        return at_array_impl(p, arr, std::make_index_sequence<K>{});
+    }
+
+    template <typename P, typename U, std::size_t K, std::size_t... Is>
+    static constexpr auto at_array_impl(const P& p, const std::array<U, K>& arr, std::index_sequence<Is...>) {
+        return p.at(arr[Is]...);
+    }
+    
+    template <typename U, std::size_t K>
+    constexpr auto at(const std::array<U, K>& arr) const {
+        return at_array(*this, arr);
+    }
 };
 
 // Non-member operator* for scalar multiplication. 
