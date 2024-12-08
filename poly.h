@@ -8,6 +8,7 @@
 #include <sstream>
 
 #define DEBUG 1
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #if DEBUG
 #define DBG_PRINT(x)                                                           \
@@ -17,6 +18,16 @@
 #else
 #define DBG_PRINT(x)
 #endif
+
+template <typename T>
+void printuj(const T& obj) {
+	std::cout << obj << "(" << obj.to_string() << ")\n";
+}
+
+template <typename T>
+void printuj(std::string msg, const T& obj) {
+	std::cout << msg << obj << "(" << obj.to_string() << ")\n";
+}
 
 template <typename U, typename T, std::size_t M, std::size_t N>
 concept PolyConvertible = (M <= N) && std::is_convertible_v<U, T>;
@@ -41,38 +52,17 @@ template <typename T, std::size_t N = 0> class poly {
   private:
     std::array<T, N> coefs{};
 
-    std::ostringstream oss(int var) const {
-	std::ostringstream res;
-	for (std::size_t i = 0; i < N; ++i) {
-		const T& a = this->coefs[i];
-		if constexpr (requires { typename T::value_type; }) {
-			res << "(" << a.oss(var+1).str() << ")";
-		}
-		else {
-			res << a;
-		}
-		if (i > 0) {
-			res << "*x" << var;
-		}
-		if (i > 1) {
-			res << "^" << i;
-		}
-		if (i < N-1) {
-			res << " + ";
-		}
-	}
-	return res;
+	template <typename P, typename U, std::size_t K>
+    static constexpr auto at_array(const P& p, const std::array<U, K>& arr) {
+        return at_array_impl(p, arr, std::make_index_sequence<K>{});
+    }
+
+    template <typename P, typename U, std::size_t K, std::size_t... Is>
+    static constexpr auto at_array_impl(const P& p, const std::array<U, K>& arr, std::index_sequence<Is...>) {
+        return p.at(arr[Is]...);
     }
 
   public:
-    std::string to_string() const {
-	return this->oss(1).str();
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const poly& p) {
-      	return os << "poly<" << typeid(T).name() << ", " << N << ">";
-    }
-
     constexpr poly() = default;
 
     template <typename U, std::size_t M>
@@ -255,7 +245,7 @@ template <typename T, std::size_t N = 0> class poly {
     	return *this;
     }
 
-	template <typename U>
+    template <typename U>
     requires std::convertible_to<U, T>
     constexpr std::common_type_t<T, U> at(const U& arg) const {
     	if (N == 0) {
@@ -273,7 +263,7 @@ template <typename T, std::size_t N = 0> class poly {
     }
     
     template <typename U, std::size_t M>
-    requires std::convertible_to<base_type<U>, T>
+    requires std::convertible_to<U, T>
     constexpr auto at(const poly<U, M>& arg) const {
        	constexpr std::size_t res_size = (N-1)*(M-1) + 1;
         using res_type = poly<std::common_type_t<T, U>, res_size>;
@@ -287,15 +277,15 @@ template <typename T, std::size_t N = 0> class poly {
     		res_type term(arg);
     		
     		for (std::size_t exp = 1; exp < i; ++exp) {
-        		res_type temp_result{};
-        		for (std::size_t k = 0; k < term.size(); ++k) {
-            		for (std::size_t j = 0; j < arg.size(); ++j) {
-                		if (k + j < temp_result.size()) {
-                    		temp_result[k + j] += term[k] * arg[j];
+        		res_type temp{};
+        		for (std::size_t k = 0; k < res_size; ++k) {
+            		for (std::size_t j = 0; j < M; ++j) {
+                		if (k + j < res_size) {
+                    		temp[k + j] += term[k] * arg[j];
                 		}
             		}
         		}
-        		term = temp_result;
+        		term = temp;
     		}
     		
     		for (std::size_t k = 0; k < term.size(); ++k) {
@@ -307,33 +297,22 @@ template <typename T, std::size_t N = 0> class poly {
     	
     	return res;
     }
-   	
+
 	template <typename U, typename... Args>
-	constexpr auto at(const U& first, Args&&... args) const
-	requires (std::convertible_to<base_type<U>, T> && (std::convertible_to<base_type<Args>, T> && ...)) {
-    	if (N <= 1) {
-        	return this->at(first);
-    	}
-	
-    	using result_type = decltype(this->coefs[0].at(args...));
-    	result_type result = this->coefs[0].at(args...);
-	
-    	for (std::size_t i = 1; i < N; ++i) {
-        	result += this->coefs[i].at(args...) * pow(first, i);
-    	}
-	
-    	return result;
+	requires (std::convertible_to<base_type<U>, T> && (std::convertible_to<base_type<Args>, T> && ...))
+	constexpr auto at(const U& first, Args&&... args) const {
+		auto res = this->at(first);
+		
+		if (N > 1) {
+			if constexpr (requires { typename decltype(res.coefs[0])::value_type; }) {
+    			for (std::size_t i = 1; i < N; ++i) {
+        			res.coefs[i] = res.coefs[i].at(args...);
+    			}
+			}
+		}
+		
+		return res;
 	}
-
-	template <typename P, typename U, std::size_t K>
-    static constexpr auto at_array(const P& p, const std::array<U, K>& arr) {
-        return at_array_impl(p, arr, std::make_index_sequence<K>{});
-    }
-
-    template <typename P, typename U, std::size_t K, std::size_t... Is>
-    static constexpr auto at_array_impl(const P& p, const std::array<U, K>& arr, std::index_sequence<Is...>) {
-        return p.at(arr[Is]...);
-    }
     
     template <typename U, std::size_t K>
     constexpr auto at(const std::array<U, K>& arr) const {
