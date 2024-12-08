@@ -24,6 +24,7 @@ namespace
     static_assert(p.at(p) == poly(4, 1));
 
     static_assert(std::is_same_v<std::common_type_t<double, poly<int, 2>>, poly<double, 2>>);
+    static_assert(std::is_same_v<std::common_type_t<poly<int, 2>, double>, poly<double, 2>>);
     static_assert(std::is_same_v<std::common_type_t<poly<int, 2>, poly<double, 2>>, poly<double, 2>>);
 
     constexpr auto q = poly(poly(1.0, 2.0), 3.0, 4.0);
