@@ -253,7 +253,7 @@ template <typename T, std::size_t N = 0> class poly {
    	
    	template <typename U, std::size_t M>
    	requires std::convertible_to<base_type<U>, T>
-   	static auto eval_term(const T& coef, const poly<U, M>& pow_base, std::size_t pow_exp) {
+   	static constexpr auto eval_term(const T& coef, const poly<U, M>& pow_base, std::size_t pow_exp) {
    		constexpr std::size_t res_size = (N-1)*(M-1) + 1;
         using res_type = poly<std::common_type_t<T, U>, res_size>;
         res_type res(coef);
@@ -273,23 +273,16 @@ template <typename T, std::size_t N = 0> class poly {
     // k == 1
     template <typename U>
     requires std::convertible_to<U, T>
-    U at(const U& arg) const {
-    	printuj("Liczymy ", *this, " .at( ");
-    	printuj("", arg, " ):\n\n");
-    	
+    constexpr U at(const U& arg) const {
     	if (N == 0) {
     		return T{};
     	}
     	
     	U res = this->coefs[0]; 
-    	printuj("Początkowa wartość: ", res, "\n");
     	
 		for (std::size_t i = 1; i < N; ++i) {
 			U term = eval_term(this->coefs[i], arg, i);
-			printuj(" dodajemy: ", term, "\n");
-			
 			res += term;
-			printuj("  i wychodzi: ", res, "\n");
     	}
     	
     	return res;
@@ -297,25 +290,18 @@ template <typename T, std::size_t N = 0> class poly {
     
     template <typename U, std::size_t M>
     requires std::convertible_to<base_type<U>, T>
-    auto at(const poly<U, M>& arg) const {
-       	printuj("Liczymy ", *this, " .at( ");
-    	printuj("", arg, " ):\n\n");
-    	    	
-    	constexpr std::size_t res_size = (N-1)*(M-1) + 1;
+    constexpr auto at(const poly<U, M>& arg) const {
+       	constexpr std::size_t res_size = (N-1)*(M-1) + 1;
         using res_type = poly<std::common_type_t<T, U>, res_size>;
         
         if (N == 0) {
     		return res_type();
     	}
         res_type res(this->coefs[0]);
-    	printuj("Początkowa wartość: ", res, "\n");
     	
     	for (std::size_t i = 1; i < N; ++i) {
 			auto term = eval_term(this->coefs[i], arg, i);
-			printuj(" dodajemy: ", term, "\n");
-			
 			res += term;
-			printuj("  i wychodzi: ", res, "\n");
     	}
     	
     	return res;
