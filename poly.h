@@ -44,7 +44,38 @@ template <typename T, std::size_t N = 0> class poly {
   private:
     std::array<T, N> coefs{};
 
+    std::ostringstream oss(int var) const {
+	std::ostringstream res;
+	for (std::size_t i = 0; i < N; ++i) {
+		const T& a = this->coefs[i];
+		if constexpr (requires { typename T::value_type; }) {
+			res << "(" << a.oss(var+1).str() << ")";
+		}
+		else {
+			res << a;
+		}
+		if (i > 0) {
+			res << "*x" << var;
+		}
+		if (i > 1) {
+			res << "^" << i;
+		}
+		if (i < N-1) {
+			res << " + ";
+		}
+	}
+	return res;
+    }
+
   public:
+    std::string to_string() const {
+	return this->oss(1).str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const poly& p) {
+      	return os << "poly<" << typeid(T).name() << ", " << N << ">";
+    }
+
     constexpr poly() = default;
 
     template <typename U, std::size_t M>
